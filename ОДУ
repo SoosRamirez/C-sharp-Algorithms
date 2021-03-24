@@ -1,0 +1,201 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Lab_02
+{
+    class MainClass
+    {
+        public delegate double Function(double x, double y);
+        static double func(double x, double y)
+        {
+            return y * Math.Cos(x);
+        }
+
+
+        //Метод Рунге-Кутты
+        static void RK4(Function F,double x0, double y0, double h0, int m, ref List<double> x, ref List<double> y_rk4)
+        {
+            double h = h0 / m;
+            for( int i = 1; i <= m; i++)
+            {
+                double k1, k2, k3, k4, yi, xi;
+                x.Add(x0);
+                y_rk4.Add(y0);
+                k1 = h * F(x0, y0);
+                k2 = h * F(x0 + h / 2, y0 + k1 / 2);
+                k3 = h * F(x0 + h / 2, y0 + k2 / 2);
+                k4 = h * F(x0 + h, y0 + k3);
+                yi = y0 + (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+                xi = x0 + h;
+                x0 = Math.Round(xi, 3);
+                y0 = Math.Round(yi, 3);
+            }
+        }
+
+
+        //Предиктор
+        static List<double> Predictor(double h0, int m, List<double> x, List<double> y_rk4)
+        {
+            List<double> result = new List<double>();
+            for (int i = 0; i<4; i++)
+            {
+                result.Add(y_rk4[i]);
+            }
+            double h = h0 / m;
+            for (int i = 4; i < m; i++)
+            {
+                double y;
+                y = y_rk4[i-1] + h / 24 * (55 * func(x[i-1], y_rk4[i-1]) - 59 * func(x[i - 2], y_rk4[i - 2])
+                + 37 * func(x[i - 3], y_rk4[i - 3]) - 9 * func(x[i - 4], y_rk4[i - 4]));
+                result.Add(y);
+            }
+            return result;
+        }
+
+
+        //Корректор
+        static List<double> Corrector(double h0, int m, List<double>x, List<double> y_rk4)
+        {
+            List<double> result = new List<double>();
+            for (int i = 0; i < 4; i++)
+            {
+                result.Add(y_rk4[i]);
+            }
+            double h = h0 / m;
+            for (int i = 4; i < m; i++)
+            {
+                double y;
+                y= y_rk4[i-1] + h / 24 * (9 * func(x[i], y_rk4[i]) - 19 * func(x[i-1], y_rk4[i-1])
+                - 5 * func(x[i-2],y_rk4[i-2]) + func(x[i - 3], y_rk4[i - 3]));
+                result.Add(y);
+            }
+            return result;
+        }
+
+
+        //Метод Адамса
+        static List<double> Adams(double h0, int m, List<double> x, List<double> y_rk4)
+        {
+            List<double> result = new List<double>();
+            for (int i = 0; i < 4; i++)
+            {
+                result.Add(y_rk4[i]);
+            }
+            double d1_f, d2_f, d3_f;
+            double h = h0 / m;
+            for (int i = 4; i < m; i++)
+            {
+                double y;
+                d1_f = func(x[i - 1], y_rk4[i - 1]) - func(x[i - 2], y_rk4[i - 2]);
+                d2_f = func(x[i - 1], y_rk4[i - 1]) - 2 * func(x[i - 2], y_rk4[i - 2]) + func(x[i - 3], y_rk4[i - 3]);
+                d3_f = func(x[i - 1], y_rk4[i - 1]) - 3 * func(x[i - 2], y_rk4[i - 2])
+                    + 3 * func(x[i - 3], y_rk4[i - 3]) - func(x[i - 4], y_rk4[i - 4]);
+                y = y_rk4[i - 1] + h * y_rk4[i - 1] + Math.Pow(h, 2) / 2 * d1_f +
+                    5 * Math.Pow(h, 3) / 12 * d2_f + 3 * Math.Pow(h, 4) / 8 * d3_f;
+                result.Add(y);
+            }
+            return result;
+        }
+
+
+        //Метод последовательных приближений
+        static double Integral(Function f, double x0,
+            double x, double y, int n)
+        {
+            double sum = 0;
+            double h = (x - x0) / n;
+            for (int i = 0; i < n; i++)
+            {
+                sum += h * f(x0 + i * 1.5 * h, y);
+            }
+            return sum;
+        }
+
+        static double Approximation(Function f, double x0,
+            double x, double y0, double y, int n)
+        {
+            double y1 = y0 + Integral(f, x0, x, y, n);
+            return y0 + Integral(f, x0, x, y1, n);
+        }
+
+        static List<double> ApproximationMethod(Function f,
+            double x0, double y0, double h0, double m)
+        {
+            List<double> result = new List<double>();
+            List<double> X = new List<double>();
+            double h = h0 / m;
+
+            for (double i = x0; i <= h0 + x0; i += h)
+                X.Add(i);
+            result.Add(y0);
+            for (int i = 1; i < X.Count; i++)
+                result.Add(Approximation(f, x0, X[i], y0, result[i - 1], 100));
+
+            return result;
+        }
+        public static void Main(string[] args)
+        {
+
+            List<double> x = new List<double>();
+            List<double> y_rk4 = new List<double>();
+            double x0 = 0;
+            double y0 = 1;
+            double h0 = 1;
+            int m = 10;
+            Function f = func;
+
+            //Рассчет значеений по методу Рунге-Кутты
+            RK4(f, x0, y0, h0, m, ref x, ref y_rk4);
+
+
+            // Вывод таблицы значений х, у для метода Рунге_Кутты
+            Console.WriteLine("Вывод значений x, y при вычислении методом Рунге-Кутты:\n");
+            for (int i = 0; i < m; i++)
+            {
+                Console.WriteLine("{0,3} | {1}", x[i], y_rk4[i]);
+            }
+
+
+            // Расчет значений у методом прогноза и коррекции
+            List<double> predictor = new List<double>();
+            List<double> corrector = new List<double>();
+            predictor = Predictor(h0, m, x, y_rk4);
+            corrector = Corrector(h0, m, x, y_rk4);
+
+
+            // Вывод таблицы значений х, у для метода прогноза и коррекции
+            Console.WriteLine("Вывод значений x, y при вычислении методом прогноза и коррекции:\n");
+            for (int i = 0; i < m; i++)
+            {
+                Console.WriteLine("{0,3} | {1, 3} | {2,3}", x[i], predictor[i], corrector[i]);
+            }
+
+            //Расчет значений методом Адамса
+            List<double> adams = new List<double>();
+            adams = Adams(h0, m, x, y_rk4);
+
+            //Вывод значений y, полученных при помощи метода Адамса
+            Console.WriteLine("Вывод значений x, y при вычислении методом Адамса:\n");
+            for (int i = 0; i < m; i++)
+            {
+                Console.WriteLine("{0,3} | {1, 3}", x[i], adams[i]);
+            }
+
+            List<double> y_SA = new List<double>();
+            y_SA = ApproximationMethod(f, x0, y0, h0, m);
+
+            // Вывод таблицы значений х, у для метода последовательных приближений
+            Console.WriteLine("\nМетод последовательных приближений:\n");
+            for (int i = 0; i < m; i++)
+            {
+                Console.WriteLine("{0,3} | {1}", x[i], y_SA[i]);
+            }
+
+
+
+        }
+    }
+}
