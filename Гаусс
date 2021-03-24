@@ -1,0 +1,113 @@
+using System;
+
+namespace Lab_03_01
+{
+    class MainClass
+    {
+        public static void Main(string[] args)
+        {
+            Console.WriteLine("Введтие размер матрицы");
+            int n;
+            n = int.Parse(Console.ReadLine());
+            double[,] a = new double[n, n];
+            double[] x = new double[n];
+            double[] b = new double[n];
+
+            Console.WriteLine("Введтие коэффициенты при x1, x1, ..., x(n)");
+            for(int i = 0; i < n; i++)
+            {
+                for(int j = 0; j< n; j++)
+                {
+                    a[i, j] = double.Parse(Console.ReadLine());
+                }
+            }
+            Console.WriteLine("Введтие коэффициенты b1, b2, ..., b(n)");
+            for (int i = 0; i < n; i++)
+            {
+                b[i] = double.Parse(Console.ReadLine());
+            }
+
+            Console.WriteLine("Получившаяся матрица A:");
+            Print_Matrix(a, n);
+            Console.WriteLine("\nПолучившаяся матрица B:");
+            Print_One_Matrix_B(b, n);
+
+            // Прямой ход метода Гаусса
+            Gauss_Straight(ref a, ref b, n);
+
+            Console.WriteLine("\nМатрица A после приведения к ступенчатому виду:");
+            Print_Matrix(a, n);
+            Console.WriteLine("\nМатрица B после прямого хода:");
+            Print_One_Matrix_B(b, n);
+
+            //Обратный ход метода Гаусса
+            Gauss_Reverse(ref x, a, b, n);
+            
+            Console.WriteLine("\nКорни системы:");
+            Print_One_Matrix_X(x, n);
+
+
+        }
+        static void Gauss_Straight(ref double[,] a, ref double[] b, int n)
+        {
+            double d;
+            for (int k = 0; k < n - 1; k++)
+            {
+                for (int i = k + 1; i < n; i++)
+                {
+                    d = a[i, k] / a[k, k];
+                    for (int j = k; j < n; j++)
+                    {
+                        a[i, j] = a[i, j] - a[k, j] * d;
+                    }
+                    b[i] = b[i] - b[k] * d;
+                }
+            }
+        }
+        static void Gauss_Reverse(ref double[] x, double[,] a, double[]b, int n)
+        {
+            double s;
+            for (int k = n - 1; k >= 0; k--)
+            {
+                s = 0;
+                for (int i = k; i <= n - 1; i++)
+                {
+                    s += a[k, i] * x[i];
+                }
+                if (a[k, k] == 0)
+                {
+                    Console.WriteLine("Элемент A", k, ',', k, "= 0");
+                    Environment.Exit(0);
+                }
+                x[k] = (b[k] - s) / a[k, k];
+            }
+        }
+        static void Print_Matrix(double[,] a, int n)
+        {
+            for(int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Console.Write(a[i, j] + "\t");
+                }
+                Console.WriteLine();
+            }
+        }
+        static void Print_One_Matrix_X(double[] a, int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                Console.WriteLine($"x[{i}] = {Math.Round(a[i], 4)}");
+
+            }
+        }
+        static void Print_One_Matrix_B(double[] a, int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                Console.WriteLine($"B[{i}] = {a[i]}");
+
+            }
+        }
+    }
+}
