@@ -1,0 +1,99 @@
+using System;
+
+namespace Lab_03_02
+{
+    class MainClass
+    {
+        public static void Main(string[] args)
+        {
+            Console.Write("Здравствуйте, введите размерность матрицы: ");
+            int n = Int32.Parse(Console.ReadLine());
+            double[,] A = new double[n, n];
+            double[] X = new double[n];
+            double[] B = new double[n];
+            double[] a = new double[n];
+            double[] b = new double[n];
+            double[] e = new double[n];
+            Console.WriteLine("Введтие коэффициенты при x1, x1, ..., x(n)");
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    A[i, j] = double.Parse(Console.ReadLine());
+                }
+            }
+            Console.WriteLine("Введтие коэффициенты b1, b2, ..., b(n)");
+            for (int i = 0; i < n; i++)
+            {
+                B[i] = double.Parse(Console.ReadLine());
+            }
+            Console.WriteLine("Получившаяся матрица A:");
+            Print_Matrix(A, n);
+            Console.WriteLine("\nПолучившаяся матрица B:");
+            Print_One_Matrix_B(B, n);
+
+            //Прямой ход прогонки
+            Tridiagonal_Straight(ref e, ref a, ref b, A, B, n);
+
+            //обратный ход прогонки
+            Tridiagonal_Reverse(ref X, a, b, n);
+
+            Console.WriteLine("\nКорни системы:");
+            Print_One_Matrix_X(X, n);
+        }
+        static void Tridiagonal_Straight(ref double[]e, ref double[]a, ref double[]b, double[,] A, double[] B, int n)
+        {
+            e[0] = A[0, 0];
+            a[0] = -A[0, 1] / e[0];
+            b[0] = B[0] / e[0];
+            for (int i = 1; i < n - 1; i++)
+            {
+                if (A[i, i] == 0)
+                {
+                    Console.WriteLine("Элемент A", i, ',', i, "= 0");
+                    Environment.Exit(0);
+                }
+                e[i] = A[i, i] + A[i, i - 1] * a[i - 1];
+                a[i] = -A[i, i + 1] / e[i];
+                b[i] = (B[i] - A[i, i - 1] * b[i - 1]) / e[i];
+            }
+            e[n - 1] = A[n - 1, n - 1] + A[n - 1, n - 2] * a[n - 2];
+            b[n - 1] = (B[n - 1] - A[n - 1, n - 2] * b[n - 2]) / e[n - 1];
+        }
+        static void Tridiagonal_Reverse(ref double[]X, double[]a, double[] b, int n)
+        {
+            X[n - 1] = b[n - 1];
+            for (int i = n - 2; i >= 0; i--)
+            {
+                X[i] = a[i] * X[i + 1] + b[i];
+            }
+        }
+        static void Print_Matrix(double[,] a, int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Console.Write(a[i, j] + "\t");
+                }
+                Console.WriteLine();
+            }
+        }
+        static void Print_One_Matrix_X(double[] a, int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                Console.WriteLine($"x[{i}] = {Math.Round(a[i], 4)}");
+
+            }
+        }
+        static void Print_One_Matrix_B(double[] a, int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                Console.WriteLine($"B[{i}] = {a[i]}");
+
+            }
+        }
+    }
+}
